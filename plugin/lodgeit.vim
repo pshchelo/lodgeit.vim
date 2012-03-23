@@ -11,6 +11,10 @@
 " 	map ^P :Lodgeit<CR>
 " (where ^P is entered using ctrl + v, ctrl + p in vim)
 
+if !exists("g:lodgeit_host")
+    let g:lodgeit_host = 'paste.pocoo.org'
+endif
+
 function! s:LodgeitInit()
 python << EOF
 
@@ -18,7 +22,7 @@ import vim
 import re
 from xmlrpclib import ServerProxy
 
-host = 'paste.pocoo.org'
+host = vim.eval('g:lodgeit_host')
 
 srv = ServerProxy('http://%s/xmlrpc/'  % (host, ), allow_none=True)
 
