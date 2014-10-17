@@ -1,6 +1,7 @@
 " lodgeit.vim: Vim plugin for paste.pocoo.org
 " Maintainer:   Armin Ronacher <armin.ronacher@active-4.com>
-" Version:      0.2
+" Version:      0.3
+" License:      MIT 
 
 " Usage:
 "   :Lodgeit    create a paste from the current buffer of selection
@@ -12,7 +13,7 @@
 " (where ^P is entered using ctrl + v, ctrl + p in vim)
 
 if !exists("g:lodgeit_host")
-    let g:lodgeit_host = 'paste.pocoo.org'
+    let g:lodgeit_host = 'paste.openstack.org'
 endif
 
 function! s:LodgeitInit()
