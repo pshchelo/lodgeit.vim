@@ -1,7 +1,9 @@
-" lodgeit.vim: Vim plugin for paste.pocoo.org
-" Maintainer:   Armin Ronacher <armin.ronacher@active-4.com>
-" Version:      0.3
-" License:      MIT 
+" lodgeit.vim: Vim plugin for paste.openstack.org
+" Originally made by Armin Ronacher
+"
+" Maintainer:   Antoni Segura Puimedon <toni@midokura.com>
+" Version:      0.4
+" License:      MIT
 
 " Usage:
 "   :Lodgeit    create a paste from the current buffer of selection
@@ -17,11 +19,14 @@ if !exists("g:lodgeit_host")
 endif
 
 function! s:LodgeitInit()
-python << EOF
+" python << EOF
+python3 << EOF
 
+#from __future__ import print_function  # Py2
 import vim
 import re
-from xmlrpclib import ServerProxy
+#from xmlrpclib import ServerProxy # Py2
+from xmlrpc.client import ServerProxy # Py3
 
 host = vim.eval('g:lodgeit_host')
 
@@ -60,7 +65,7 @@ language_mapping = {
 }
 
 language_reverse_mapping = {}
-for key, value in language_mapping.iteritems():
+for key, value in language_mapping.items():
     language_reverse_mapping[value] = key
 
 def paste_id_from_url(url):
@@ -69,6 +74,7 @@ def paste_id_from_url(url):
     if m is not None:
         return m.group(1)
 
+# Py2 only!
 def make_utf8(code):
     enc = vim.eval('&fenc') or vim.eval('&enc')
     return code.decode(enc, 'ignore').encode('utf-8')
@@ -79,7 +85,8 @@ endfunction
 
 function! s:Lodgeit(line1,line2,count,...)
 call s:LodgeitInit()
-python << endpython
+" python << endpython
+python3 << endpython
 
 # download paste
 if vim.eval('a:0') == '1':
@@ -96,13 +103,14 @@ if vim.eval('a:0') == '1':
     if paste:
         vim.command('tabnew')
         vim.command('file Lodgeit\ Paste\ \#%s' % paste_id)
-        vim.current.buffer[:] = [line.encode('utf-8') for line in paste['code'].splitlines()]
+        # vim.current.buffer[:] = [line.encode('utf-8') for line in paste['code'].splitlines()]  # Py2 only
+        vim.current.buffer[:] = paste['code'].splitlines()
         vim.command('setlocal ft=' + language_reverse_mapping.
                     get(paste['language'], 'text'))
         vim.command('setlocal nomodified')
         vim.command('let b:lodgeit_paste_id="%s"' % paste_id)
     else:
-        print 'Paste not Found'
+        print('Paste not Found')
 
 # new paste or reply
 else:
@@ -112,7 +120,7 @@ else:
         code = '\n'.join(vim.current.buffer[rng_start:rng_end])
     else:
         code = '\n'.join(vim.current.buffer)
-    code = make_utf8(code)
+    #code = make_utf8(code) # Py2 only
 
     parent = None
     update_buffer_info = False
@@ -124,8 +132,10 @@ else:
     paste_id = new_paste(lng_code, code, parent)
     url = 'http://%s/show/%s' % (host, paste_id)
 
-    print 'Pasted #%s to %s' % (paste_id, url)
-    vim.command(':call setreg(\'+\', %r)' % url)
+    print('Pasted #%s to %s' % (paste_id, url))
+    # vim.command(':call setreg(\'+\', %r)' % url)  # vim complains on missing register '+'
+    # may be connected with GUI? https://github.com/vim-pandoc/vim-pandoc/issues/127
+    vim.command(":call setreg('', %r)" % url)
 
     if update_buffer_info:
         vim.command('file Lodgeit\ Paste\ \#%s' % paste_id)
